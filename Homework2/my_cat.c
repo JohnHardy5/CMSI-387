@@ -9,12 +9,28 @@
 #include <string.h>
 #include <stdlib.h>
 
-int main(int argc, char** argv) {
-  if (argc == 0) {
-    printf("Not enough arguments provided.\n");
+int readFile(char* filePath) {
+  int currChar;
+  FILE *file;
+  file = fopen(filePath, "r");
+  if (file) {
+    while ((currChar = getc(file)) != EOF) {
+        putchar(currChar);
+    }
+    fclose(file);
+  } else {
+    printf("There was a problem opening the file. Make sure the correct path is given.\n");
     return -1;
   }
-  char* filePath = argv[1];
-  printf("%s\n", filePath);
+  return 0;
+}
+
+int main(int argc, char** argv) {
+  if (argc == 1) {
+    printf("Not enough arguments provided.\n");
+    return -1;
+  } else if(argc == 2) {
+     return readFile(argv[1]);
+  }
   return 0;
 }
