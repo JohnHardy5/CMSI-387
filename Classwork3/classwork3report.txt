@@ -1,0 +1,7 @@
+Group Members: John Hardy, Joey Martinez, and Jackson Watkins
+
+Problem 1:
+1) we used ps -el to list all the running processes. Then we looked for the
+parent and child processes. The parent process has the PID which is the
+PPID of its child.
+2)

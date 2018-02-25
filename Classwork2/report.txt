@@ -1,0 +1,85 @@
+Jackson Watkins, John Hardy, J Goocher, Joey Martinez
+OS Classwork2
+
+Problem 1: Report
+
+1.) Bytes required for char, int, double:
+
+A ‘char’ has 1 bytes reserved
+An ‘int’ has 4 bytes reserved
+A ‘double’ has 8 bytes reserved
+
+C code: 
+#include <stdio.h>
+int main () {
+    printf("%zu""\n""", sizeof(int));
+    printf("%zu""\n""", sizeof(char));
+    printf("%zu""\n""", sizeof(double));
+    return 0;
+}
+
+2.)
+_______________________________________________________________________________________________________________________
+Allocation method   |     Purpose of     |   Where it is   |   Memory allocation   |                                   |
+                    |  allocation method | reserved in RAM |      syntax in C      |     When the memory is freed      |
+____________________|____________________|_________________|_______________________|___________________________________|
+                    |                    |                 |                       |                                   |
+  Automatic/Local   |  Hold information  | Within the stack|       int x = 0;      |  When we leave the current scope  |
+                    |   at run-time      | frame of current|                       |                                   |
+                    |                    |    procedure    |                       |                                   |
+____________________|____________________|_________________|_______________________|___________________________________|
+                    |                    |                 |                       |                                   |
+      Static        |  Hold information  |   Main Memory   |    static int x = 0;  |   When the program terminates     |
+                    |  before run-time   |                 |                       |                                   |
+____________________|____________________|_________________|_______________________|___________________________________|
+                    |                    |                 |                       |                                   |
+      Dynamic       |Give programmer more|   Dynamically   |      int* array =     |  The memory is not freed until    |
+                    |  control over how  |  stored in the  |malloc(3*sizeof(int)); |  you call the function free()!    |
+                    |  memory is managed |      Heap       |                       |                                   |
+____________________|____________________|_________________|_______________________|___________________________________|
+
+3.) Reserve amount of memory for an array of 5 ’int’’s
+
+automatic notation:
+int arr[5];
+
+malloc notation:
+int* ptr = (int*) malloc(5 * sizeof (int));
+
+calloc notation:
+int* ptr = (int*) calloc(5 ,sizeof (int));
+
+
+4. Allocation failure occurs when a block of memory is requested but there is no contiguous block of memory large enough to fill the request.
+
+//This is for a machine with a 10k heap
+#define K (1024)
+char *p1;
+p1 = malloc(3*K);
+p2 = malloc(4*K);
+free(p1);
+p1 = malloc(4*K);
+
+A memory leak occurs when memory that is no longer needed is not freed
+
+#include <stdlib.h>
+void function_which_allocates(void) {
+    float *a = malloc(sizeof(float) * 45);
+}
+int main(void) {
+    function_which_allocates();
+}
+
+Double-freeing a block of memory will corrupt the state of the memory manager, which might cause existing blocks of memory to get corrupted or for future allocations to fail
+
+char* ptr = malloc(sizeof(char));
+*ptr = 'a';
+free(ptr);
+free(ptr);
+
+5. The code snippet tries to access the memory address of the array, rather than the actual values of the array. Once the function call finishes, it returns a pointer to the stack, but the value the pointer was pointing too was popped, so it not longer points to the array value anymore. To fix this, you have to allocate memory in the heap. 
+
+
+
+
+
