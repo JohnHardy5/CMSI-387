@@ -6,6 +6,8 @@
  * 3) moves the first directory into the second if two directories are given
  */
 #include <sys/types.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -37,6 +39,16 @@ int unlinkFileFrom(char* filePath) {
   return 0;
 }
 
+int moveDir(char* s, char* d) {
+  d = strcat(d, "/");//Setup destination for new directory
+  d = strcat(d, basename(s));
+  if (mkdir(d, 0777) == -1) {
+    printf("Directory could not be moved.\n");
+    return -1;
+  }
+  DIR* src = opendir(s);
+}
+
 int main(int argc, char** argv) {
   if (argc < 3) {
     printf("Not enough args given.\n");
@@ -58,17 +70,23 @@ int main(int argc, char** argv) {
     if (isFile(pathTwo)) {//Remove file that is being overwritten
       unlinkFileFrom(pathTwo);
     } else {//update the directory so that it has the file name
-      char* fileName = basename(pathOne);
       pathTwo = strcat(pathTwo, "/");
       pathTwo = strcat(pathTwo, basename(pathOne));
     }
     linkFileTo(pathOne, pathTwo);
     unlinkFileFrom(pathOne);
   } else {
-
+    if (isFile(pathTwo)) {//update the directory so that it has the file name
+      pathOne = strcat(pathOne, "/");
+      pathOne = strcat(pathOne, basename(pathTwo));
+      linkFileTo(pathTwo, pathOne);
+      unlinkFileFrom(pathTwo);
+    } else {//both are directories, transfer files inside
+      moveDir(pathOne, pathTwo);
+    }
   }
-  printf("%s\n", pathOne);
-  printf("%s\n", pathTwo);
+  //printf("%s\n", pathOne);
+  //printf("%s\n", pathTwo);
 
   free(pathOne);
   free(pathTwo);
