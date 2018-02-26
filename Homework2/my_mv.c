@@ -47,6 +47,19 @@ int moveDir(char* s, char* d) {
     return -1;
   }
   DIR* src = opendir(s);
+  struct dirent* currItem;
+  if (src == NULL) {
+    printf("Source directory could not be opened.\n");
+    return -1;
+  }
+  while ((currItem = readdir(src)) != NULL) {
+    printf("%s\n", currItem->d_name);
+  }
+  if (closedir(src) == -1) {
+    printf("Source directory could not be closed.\n");
+    return -1;
+  }
+  return 0;
 }
 
 int main(int argc, char** argv) {
