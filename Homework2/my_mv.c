@@ -15,7 +15,9 @@
 #include <sys/stat.h>
 #include <libgen.h>
 
-static int BUFFER_SIZE = 100;
+static const int BUFFER_SIZE = 100;
+static char* pathOne;
+static char* pathTwo;
 
 int isFile(char* path) {
   struct stat path_stat;
@@ -32,7 +34,7 @@ int isDir(char* path) {
 int linkFileTo(char* filePath, char* newPath) {
   if (link(filePath, newPath) == -1) {
     printf("There was a problem linking the file to the given path.\n");
-    return -1;
+    exit(-1);
   }
   return 0;
 }
@@ -40,7 +42,7 @@ int linkFileTo(char* filePath, char* newPath) {
 int unlinkFileFrom(char* filePath) {
   if (unlink(filePath) == -1) {
     printf("There was a problem removing the second file.\n");
-    return -1;
+    exit(-1);
   }
   return 0;
 }
@@ -55,20 +57,20 @@ int moveDir(char* s, char* d) {
   //printf("%s\n", tempD);
   if (mkdir(tempD, 0777) == -1) {
     printf("New directory could not be created.\n");
-    return -1;
+    exit(-1);
   }
 
   DIR* src = opendir(tempS);
   if (src == NULL) {
     printf("Source directory could not be opened.\n");
-    return -1;
+    exit(-1);
   }
 
   struct dirent* currItem;
   while ((currItem = readdir(src)) != NULL) {
     strncpy(tempS, s, BUFFER_SIZE);
     strncpy(tempD, d, BUFFER_SIZE);
-    tempD = strcat(tempD, "/");//Setup destination for new directory
+    tempD = strcat(tempD, "/");
     tempD = strcat(tempD, basename(tempS));
     char* name = currItem->d_name;
     if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) {
@@ -79,12 +81,12 @@ int moveDir(char* s, char* d) {
     if (isFile(currPath)) {
       char* newPath = strcat(tempD, "/");
       newPath = strcat(newPath, name);
-      printf("Found file: %s\n", currPath);
-      printf("Linking to dir: %s\n", newPath);
+      //printf("Found file: %s\n", currPath);
+      //printf("Linking to dir: %s\n", newPath);
       linkFileTo(currPath, newPath);
       unlinkFileFrom(currPath);
     } else if (isDir(currPath)){//Otherwise repeat on the sub-directory
-      printf("Found directory: %s\n", currPath);
+      //printf("Found directory: %s\n", currPath);
       moveDir(currPath, tempD);
     }
   }
@@ -103,36 +105,36 @@ int moveDir(char* s, char* d) {
 int main(int argc, char** argv) {
   if (argc < 3) {
     printf("Not enough args given.\n");
-    return -1;
+    exit(-1);
   }
-  char* pathOne = malloc(sizeof(char) * BUFFER_SIZE);
-  char* pathTwo = malloc(sizeof(char) * BUFFER_SIZE);
 
+  pathOne = malloc(sizeof(char) * BUFFER_SIZE);
+  pathTwo = malloc(sizeof(char) * BUFFER_SIZE);
   if (realpath(argv[1], pathOne) == NULL) {
     printf("First argument was not a path.\n");
-    return -1;
+    exit(-1);
   }
   if (realpath(argv[2], pathTwo) == NULL) {
     printf("Second argument was not a path.\n");
-    return -1;
+    exit(-1);
   }
 
   if (isFile(pathOne)) {
     if (isFile(pathTwo)) {//Remove file that is being overwritten
       unlinkFileFrom(pathTwo);
-    } else {//update the directory so that it has the file name
+    } else if (isDir(pathTwo)) {//update the directory so that it has the file name
       pathTwo = strcat(pathTwo, "/");
       pathTwo = strcat(pathTwo, basename(pathOne));
     }
     linkFileTo(pathOne, pathTwo);
     unlinkFileFrom(pathOne);
-  } else {
+  } else if (isDir(pathOne)) {
     if (isFile(pathTwo)) {//update the directory so that it has the file name
       pathOne = strcat(pathOne, "/");
       pathOne = strcat(pathOne, basename(pathTwo));
       linkFileTo(pathTwo, pathOne);
       unlinkFileFrom(pathTwo);
-    } else {//both are directories, transfer files inside
+    } else if (isDir(pathTwo)) {//both are directories, transfer files inside
       moveDir(pathOne, pathTwo);
     }
   }
