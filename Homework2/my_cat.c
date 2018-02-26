@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
     return readFile(argv[1]);
   } else { //More than one file given, read each file and concatenate them together
     for (int i = 1; i < argc; i++) {
-      if (readFile(argv[i]) == -1) {
+      if (readFile(argv[i]) == -1) {//Check for an error each time
         return -1;
       }
     }
