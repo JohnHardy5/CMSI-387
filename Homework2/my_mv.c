@@ -9,9 +9,11 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <libgen.h>
 
-static int BUFFER_SIZE = 50;
+static int BUFFER_SIZE = 100;
 
 int isFile(char* path) {
   struct stat path_stat;
@@ -19,7 +21,11 @@ int isFile(char* path) {
   return S_ISREG(path_stat.st_mode);
 }
 
-int linkFileTo(char* filePath, char* dirpath) {
+int linkFileTo(char* filePath, char* newPath) {
+  if (link(filePath, newPath) == -1) {
+    printf("There was a problem linking the file to the given path.\n");
+    return -1;
+  }
   return 0;
 }
 
@@ -44,18 +50,18 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  printf("%s\n", pathOne);
-  printf("%s\n", pathTwo);
-/*
   if (isFile(pathOne)) {
-    if (isFile(pathTwo)) {
-      linkFileTo(pathOne, pathTwo);
-    } else {
-      linkFileTo(pathOne, pathTwo);
+    if (!isFile(pathTwo)) {//update the directory so that it has the file name
+      char* fileName = basename(pathOne);
+      pathTwo = strcat(pathTwo, "/");
+      pathTwo = strcat(pathTwo, basename(pathOne));
     }
+    linkFileTo(pathOne, pathTwo);
   } else {
 
-  }*/
+  }
+  printf("%s\n", pathOne);
+  printf("%s\n", pathTwo);
 
   free(pathOne);
   free(pathTwo);
