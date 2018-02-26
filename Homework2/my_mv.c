@@ -30,6 +30,10 @@ int linkFileTo(char* filePath, char* newPath) {
 }
 
 int unlinkFileFrom(char* filePath) {
+  if (unlink(filePath) == -1) {
+    printf("There was a problem removing the second file.\n");
+    return -1;
+  }
   return 0;
 }
 
@@ -51,12 +55,15 @@ int main(int argc, char** argv) {
   }
 
   if (isFile(pathOne)) {
-    if (!isFile(pathTwo)) {//update the directory so that it has the file name
+    if (isFile(pathTwo)) {//Remove file that is being overwritten
+      unlinkFileFrom(pathTwo);
+    } else {//update the directory so that it has the file name
       char* fileName = basename(pathOne);
       pathTwo = strcat(pathTwo, "/");
       pathTwo = strcat(pathTwo, basename(pathOne));
     }
     linkFileTo(pathOne, pathTwo);
+    unlinkFileFrom(pathOne);
   } else {
 
   }
