@@ -16,8 +16,7 @@
 #include <libgen.h>
 
 static const int BUFFER_SIZE = 1024;
-static char* pathOne;
-static char* pathTwo;
+
 
 int isFile(char* path) {
   struct stat path_stat;
@@ -25,20 +24,23 @@ int isFile(char* path) {
   return S_ISREG(path_stat.st_mode);
 }
 
+
 int isDir(char* path) {
   struct stat path_stat;
   stat(path, &path_stat);
   return S_ISDIR(path_stat.st_mode);
 }
 
+
 /*
  *WARNING: concatName changes the first char array
  */
-int concatName(char* fpOne, char* fpTwo) {
-  fpOne = strncat(fpOne, "/", BUFFER_SIZE);
-  fpOne = strncat(fpOne, basename(fpTwo), BUFFER_SIZE);
+int concatName(char* fp, char* name) {
+  fp = strncat(fp, "/", BUFFER_SIZE);
+  fp = strncat(fp, name, BUFFER_SIZE);
   return 0;
 }
+
 
 int linkFileTo(char* filePath, char* newPath) {
   if (link(filePath, newPath) == -1) {
@@ -48,6 +50,7 @@ int linkFileTo(char* filePath, char* newPath) {
   return 0;
 }
 
+
 int unlinkFileFrom(char* filePath) {
   if (unlink(filePath) == -1) {
     write(2, "Could not remove the second file.\n", 34);
@@ -56,60 +59,68 @@ int unlinkFileFrom(char* filePath) {
   return 0;
 }
 
-int moveDir(char* s, char* d) {
-  char* tempS = malloc(sizeof(char) * BUFFER_SIZE);
-  char* tempD = malloc(sizeof(char) * BUFFER_SIZE);
-  strncpy(tempS, s, BUFFER_SIZE);
-  strncpy(tempD, d, BUFFER_SIZE);
-  tempD = strcat(tempD, "/");//Setup destination for new directory
-  tempD = strcat(tempD, basename(tempS));
-  //printf("%s\n", tempD);
-  if (mkdir(tempD, 0777) == -1) {
+
+int makeDir(char* path) {
+  if (mkdir(path, 0777) == -1) {
     write(2, "New directory could not be created.\n", 35);
     exit(-1);
   }
+  return 0;
+}
 
-  DIR* src = opendir(tempS);
-  if (src == NULL) {
+int moveDir(char* src, char* dest) {
+  DIR* currDir = opendir(src);
+  if (currDir == NULL) {
     write(2, "Source directory could not be opened.\n", 38);
     exit(-1);
   }
 
   struct dirent* currItem;
-  while ((currItem = readdir(src)) != NULL) {
-    strncpy(tempS, s, BUFFER_SIZE);
-    strncpy(tempD, d, BUFFER_SIZE);
-    tempD = strcat(tempD, "/");
-    tempD = strcat(tempD, basename(tempS));
-    char* name = currItem->d_name;
-    if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) {
+  char* newDirPath = malloc(sizeof(char) * BUFFER_SIZE);
+  strncpy(newDirPath, dest, BUFFER_SIZE);
+  concatName(newDirPath, basename(src));//Setup destination for new directory
+  makeDir(newDirPath);
+
+  while ((currItem = readdir(currDir)) != NULL) {
+    char* itemName = currItem->d_name;
+    if (strcmp(itemName, ".") == 0 || strcmp(itemName, "..") == 0) {
       continue;
     }
-    char* currPath = strcat(tempS, "/");
-    currPath = strcat(currPath, name);
-    if (isFile(currPath)) {
-      char* newPath = strcat(tempD, "/");
-      newPath = strcat(newPath, name);
-      //printf("Found file: %s\n", currPath);
+
+    char* currItemPath = malloc(sizeof(char) * BUFFER_SIZE);
+    char* newPath = malloc(sizeof(char) * BUFFER_SIZE);
+    strncpy(currItemPath, src, BUFFER_SIZE);
+    strncpy(newPath, newDirPath, BUFFER_SIZE);
+    concatName(currItemPath, itemName);
+    concatName(newPath, itemName);
+    if (isFile(currItemPath)) {
+      //printf("Found file: %s\n", currItemPath);
       //printf("Linking to dir: %s\n", newPath);
-      linkFileTo(currPath, newPath);
-      unlinkFileFrom(currPath);
-    } else if (isDir(currPath)){//Otherwise repeat on the sub-directory
-      //printf("Found directory: %s\n", currPath);
-      moveDir(currPath, tempD);
+      linkFileTo(currItemPath, newPath);
+      unlinkFileFrom(currItemPath);
+    } else if (isDir(currItemPath)){//Otherwise repeat on the sub-directory
+      //printf("Found directory: %s\n", currItemPath);
+      moveDir(currItemPath, newDirPath);
+    } else {
+      write(2, "Item in src directory is not a file or directory.\n", 50);
+      exit(-1);
     }
+
+    free(currItemPath);
+    free(newPath);
   }
 
-  rmdir(s);//All files moved, delete old folder
+  rmdir(src);//All files moved, delete old folder
 
-  if (closedir(src) == -1) {
+  if (closedir(currDir) == -1) {
     write(2, "Source directory could not be closed.\n", 38);
     exit(-1);
   }
-  free(tempS);
-  free(tempD);
+
+  free(newDirPath);
   return 0;
 }
+
 
 int main(int argc, char** argv) {
   if (argc < 3) {
@@ -117,8 +128,8 @@ int main(int argc, char** argv) {
     exit(-1);
   }
 
-  pathOne = malloc(sizeof(char) * BUFFER_SIZE);
-  pathTwo = malloc(sizeof(char) * BUFFER_SIZE);
+  char* pathOne = malloc(sizeof(char) * BUFFER_SIZE);
+  char* pathTwo = malloc(sizeof(char) * BUFFER_SIZE);
   if (realpath(argv[1], pathOne) == NULL) {
     write(2, "First argument was not a path.\n", 31);
     exit(-1);
@@ -132,7 +143,7 @@ int main(int argc, char** argv) {
     if (isFile(pathTwo)) {//Remove file that is being overwritten
       unlinkFileFrom(pathTwo);
     } else if (isDir(pathTwo)) {//update the directory so that it has the file name
-      concatName(pathTwo, pathOne);
+      concatName(pathTwo, basename(pathOne));
     } else {
       write(2, "Second path is not a file or directory.\n", 40);
       exit(-1);
@@ -141,7 +152,7 @@ int main(int argc, char** argv) {
     unlinkFileFrom(pathOne);
   } else if (isDir(pathOne)) {
     if (isFile(pathTwo)) {//update the directory so that it has the file name
-      concatName(pathOne, pathTwo);
+      concatName(pathOne, basename(pathTwo));
       linkFileTo(pathTwo, pathOne);
       unlinkFileFrom(pathTwo);
     } else if (isDir(pathTwo)) {//both are directories, transfer files inside
