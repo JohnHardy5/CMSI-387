@@ -60,6 +60,13 @@ int unlinkFileFrom(char* filePath) {
 }
 
 
+char* createCopyOf(char* toCopy) {
+  char* copy = malloc(sizeof(char) * BUFFER_SIZE);
+  strncpy(copy, toCopy, BUFFER_SIZE);
+  return copy;
+}
+
+
 int makeDir(char* path) {
   if (mkdir(path, 0777) == -1) {
     write(2, "New directory could not be created.\n", 35);
@@ -68,6 +75,12 @@ int makeDir(char* path) {
   return 0;
 }
 
+
+/*
+ * Iterates through each item in source directory and moves it to destination
+ * directory. If item is another directory, process is repeated on that
+ * sub-directory.
+ */
 int moveDir(char* src, char* dest) {
   DIR* currDir = opendir(src);
   if (currDir == NULL) {
@@ -76,8 +89,7 @@ int moveDir(char* src, char* dest) {
   }
 
   struct dirent* currItem;
-  char* newDirPath = malloc(sizeof(char) * BUFFER_SIZE);
-  strncpy(newDirPath, dest, BUFFER_SIZE);
+  char* newDirPath = createCopyOf(dest);
   concatName(newDirPath, basename(src));//Setup destination for new directory
   makeDir(newDirPath);
 
@@ -87,19 +99,15 @@ int moveDir(char* src, char* dest) {
       continue;
     }
 
-    char* currItemPath = malloc(sizeof(char) * BUFFER_SIZE);
-    char* newPath = malloc(sizeof(char) * BUFFER_SIZE);
-    strncpy(currItemPath, src, BUFFER_SIZE);
-    strncpy(newPath, newDirPath, BUFFER_SIZE);
+    char* currItemPath = createCopyOf(src);
     concatName(currItemPath, itemName);
+    char* newPath = createCopyOf(newDirPath);
     concatName(newPath, itemName);
+
     if (isFile(currItemPath)) {
-      //printf("Found file: %s\n", currItemPath);
-      //printf("Linking to dir: %s\n", newPath);
       linkFileTo(currItemPath, newPath);
       unlinkFileFrom(currItemPath);
     } else if (isDir(currItemPath)){//Otherwise repeat on the sub-directory
-      //printf("Found directory: %s\n", currItemPath);
       moveDir(currItemPath, newDirPath);
     } else {
       write(2, "Item in src directory is not a file or directory.\n", 50);
@@ -130,6 +138,7 @@ int main(int argc, char** argv) {
 
   char* pathOne = malloc(sizeof(char) * BUFFER_SIZE);
   char* pathTwo = malloc(sizeof(char) * BUFFER_SIZE);
+
   if (realpath(argv[1], pathOne) == NULL) {
     write(2, "First argument was not a path.\n", 31);
     exit(-1);
