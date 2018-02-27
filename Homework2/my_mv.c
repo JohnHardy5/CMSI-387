@@ -5,10 +5,7 @@
  * 2) overwrites the second file if two files are given
  * 3) moves the first directory into the second if two directories are given
  */
-#include <sys/types.h>
 #include <dirent.h>
-#include <sys/stat.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
