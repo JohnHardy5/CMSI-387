@@ -134,12 +134,12 @@ int main(int argc, char** argv) {
   }
 
   char* pathOne = malloc(sizeof(char) * BUFFER_SIZE);
-  char* pathTwo = malloc(sizeof(char) * BUFFER_SIZE);
-
   if (realpath(argv[1], pathOne) == NULL) {
     write(2, "First argument was not a path.\n", 31);
     exit(-1);
   }
+  
+  char* pathTwo = malloc(sizeof(char) * BUFFER_SIZE);
   if (realpath(argv[2], pathTwo) == NULL) {
     write(2, "Second argument was not a path.\n", 32);
     exit(-1);

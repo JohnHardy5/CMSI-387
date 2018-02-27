@@ -1,45 +1,48 @@
 /*
  * Written by John Hardy
  * A basic rendition of the cat command line argument that quickly spits out the
- * contents of a file into the terminal.
+ * contents of a file into the terminal. It can also concatenate multiple files
+ * together.
  */
 
-#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>//TODO: Remove printfs
+
+static const int BUFFER_SIZE = 1024;
 
 /*
  * Reads the file at a given path and prints it to stdout.
  * Returns an error if file could not be found or opened.
  */
 int readFile(char* filePath) {
-  int currChar;
-  FILE *file;
-  file = fopen(filePath, "r");
-  if (file) {
-    while ((currChar = getc(file)) != EOF) {
-        putchar(currChar);
-    }
-    fclose(file);
-  } else {
-    printf("There was a problem opening the file, ensure the correct path is given.\n");
-    return -1;
+  FILE* file = fopen(filePath, "r");
+  if (!file) {
+    write(2, "Could not open file.\n", 21);
+    exit(-1);
   }
+  int fd = fileno(file);
+  char buffer[BUFFER_SIZE];
+  int charsRead;
+
+  while ((charsRead = read(fd, buffer, BUFFER_SIZE)) > 0) {
+      write(1, buffer, charsRead);
+  }
+
+  fclose(file);
   return 0;
 }
 
 int main(int argc, char** argv) {
-  if (argc == 1) { //Need at least one argument
-    printf("No files provided.\n");
+  if (argc == 1) {
+    write(2, "No files provided.\n", 19);
     return -1;
   } else if(argc == 2) { //Single file was given, so just print it out
-    return readFile(argv[1]);
+    readFile(argv[1]);
   } else { //More than one file given, read each file and concatenate them together
     for (int i = 1; i < argc; i++) {
-      if (readFile(argv[i]) == -1) {//Check for an error each time
-        return -1;
-      }
+      readFile(argv[i]);
     }
   }
   return 0;
