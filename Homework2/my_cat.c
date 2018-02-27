@@ -1,14 +1,13 @@
 /*
  * Written by John Hardy
  * A basic rendition of the cat command line argument that quickly spits out the
- * contents of a file into the terminal. It can also concatenate multiple files
+ * contents of a file into stdout. It can also concatenate multiple files
  * together.
  */
 
 #include <unistd.h>
-#include <string.h>
 #include <stdlib.h>
-#include <stdio.h>//TODO: Remove printfs
+#include <stdio.h>
 
 static const int BUFFER_SIZE = 1024;
 
