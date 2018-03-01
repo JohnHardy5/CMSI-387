@@ -9,12 +9,28 @@
 
 #include <stdio.h>//TODO: Remove printfs and stdio library
 
-static const int BUFFER_SIZE = 1024;
+#define BUFFER_SIZE 1024
+
+static char buffOne[BUFFER_SIZE];
+static char buffTwo[BUFFER_SIZE];
 
 int isFile(char* path) {
   struct stat path_stat;
   stat(path, &path_stat);
   return S_ISREG(path_stat.st_mode);
+}
+
+int loadBuffer(char* path, char* buff) {
+  FILE* file = fopen(path, "r");
+  if (!file) {
+    write(2, "Could not open file.\n", 21);
+    exit(-1);
+  }
+
+  int fd = fileno(file);
+  int charsRead = read(fd, buff, BUFFER_SIZE);
+  fclose(file);
+  return charsRead;
 }
 
 char* loadFilePath(char* p) {
@@ -39,12 +55,15 @@ int main(int argc, char** argv) {
 
   char* pathTwo = loadFilePath(argv[2]);
   if (pathTwo == NULL) {
-    write(2, "Second argument was not a valid.\n", 33);
+    write(2, "Second argument was not valid.\n", 31);
     exit(-1);
   }
 
-  printf("%s\n", pathOne);
-  printf("%s\n", pathTwo);
+  loadBuffer(pathOne, buffOne);
+  loadBuffer(pathTwo, buffTwo);
+
+  printf("%s\n", buffOne);
+  printf("%s\n", buffTwo);
 
   free(pathOne);
   free(pathTwo);
