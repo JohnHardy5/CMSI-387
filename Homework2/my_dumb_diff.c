@@ -9,7 +9,7 @@
 
 #include <stdio.h>//TODO: Remove printfs and stdio library
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 42
 
 static char buffOne[BUFFER_SIZE];
 static char buffTwo[BUFFER_SIZE];
@@ -20,16 +20,8 @@ int isFile(char* path) {
   return S_ISREG(path_stat.st_mode);
 }
 
-int loadBuffer(char* path, char* buff) {
-  FILE* file = fopen(path, "r");
-  if (!file) {
-    write(2, "Could not open file.\n", 21);
-    exit(-1);
-  }
-
-  int fd = fileno(file);
+int loadBuffer(int fd, char* buff) {
   int charsRead = read(fd, buff, BUFFER_SIZE);
-  fclose(file);
   return charsRead;
 }
 
@@ -39,6 +31,26 @@ char* loadFilePath(char* p) {
     return NULL;
   }
   return newPath;
+}
+
+FILE* loadFile(char* p) {
+  FILE* file = fopen(p, "r");
+  if (!file) {
+    write(2, "Could not open file.\n", 21);
+    exit(-1);
+  }
+  return file;
+}
+
+int compareFiles(char* pathOne, char* pathTwo) {
+  FILE* fileOne = loadFile(pathOne);
+  FILE* fileTwo = loadFile(pathTwo);
+
+
+
+  fclose(fileOne);
+  fclose(fileTwo);
+  return 0;
 }
 
 int main(int argc, char** argv) {
@@ -59,13 +71,29 @@ int main(int argc, char** argv) {
     exit(-1);
   }
 
-  loadBuffer(pathOne, buffOne);
-  loadBuffer(pathTwo, buffTwo);
+  FILE* fileOne = fopen(pathOne, "r");
+  if (!fileOne) {
+    write(2, "Could not open first file.\n", 27);
+    exit(-1);
+  }
 
-  printf("%s\n", buffOne);
-  printf("%s\n", buffTwo);
+  FILE* fileTwo = fopen(pathTwo, "r");
+  if (!fileTwo) {
+    write(2, "Could not open second file.\n", 28);
+    exit(-1);
+  }
+
+  int fdOne = fileno(fileOne);
+  int fdTwo = fileno(fileTwo);
+
+  int charsRead = loadBuffer(fdOne, buffOne);
+  write(1, buffOne, charsRead);
+  charsRead = loadBuffer(fdTwo, buffTwo);
+  write(1, buffTwo, charsRead);
 
   free(pathOne);
   free(pathTwo);
+  fclose(fileOne);
+  fclose(fileTwo);
   return 0;
 }
