@@ -1,13 +1,13 @@
 /*
  * Written by John Hardy
  * A basic rendition of the diff command that compares two text files and
- * prints to stdout the lines containing differences between them.
+ * prints to stdout the lines containing differences between them. Note, this
+ * program does not handle isolated newlines in the middle of text documents.
  */
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-
-#include <stdio.h>//TODO: Remove printfs and stdio library
+#include <stdio.h>
 
 #define BUFFER_SIZE 1
 #define LINE_SIZE 1024
@@ -87,10 +87,6 @@ int compareFiles(FILE* fOne, FILE* fTwo) {
     charTwo = buffTwo[currPosTwo];
     lineOne[offsetOne] = buffOne[currPosOne];
     lineTwo[offsetTwo] = buffTwo[currPosTwo];
-    // printf("charOne: %c\n", charOne);
-    // printf("buffer one: %s\n", lineOne);
-    // printf("charTwo: %c\n", charTwo);
-    // printf("buffer two: %s\n", lineTwo);
 
     if (currPosOne == fOneCharsRead - 1) {//We have reached the end of buffer one
       fOneCharsRead = loadBuffer(fOne, buffOne);
@@ -143,16 +139,6 @@ int main(int argc, char** argv) {
     write(2, "Could not open second file.\n", 28);
     exit(-1);
   }
-  // loadBuffer(fileno(fileOne), buffOne);
-  // //loadBuffer(fileno(fileTwo), buffTwo);
-  // printf("Buffer one: %s\n", buffOne);
-  // printf("Buffer two: %s\n", buffTwo);
-  // read(fileno(fileOne), buffOne, 1);
-  // read(fileno(fileOne), buffOne, 1);
-  // read(fileno(fileOne), buffOne, 1);
-  // read(fileno(fileOne), buffOne, 1);
-  // read(fileno(fileOne), buffOne, 1);
-  // printf("Buffer one: %s\n", buffOne);
 
   compareFiles(fileOne, fileTwo);
 
